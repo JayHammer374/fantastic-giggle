@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="es-CO">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f4f5f1">
+    <meta name="description" content="Panel para estructurar planes de proyecto con enfoque PHVA.">
+    <title>Nuevo plan | Proyecto Claro</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Navegación principal">
+        <a class="brand" href="#inicio" aria-label="Proyecto Claro, inicio">
+          <span class="brand-mark" aria-hidden="true">PC</span>
+          <span class="brand-name">proyecto<span>claro</span></span>
+        </a>
+
+        <div class="workspace-label">ESPACIO DE TRABAJO</div>
+        <nav class="primary-nav">
+          <a class="nav-item is-active" href="#nuevo-plan" aria-current="page">
+            <span class="nav-icon nav-icon-plus" aria-hidden="true"></span>
+            <span>Nuevo plan</span>
+          </a>
+          <a class="nav-item" href="#planes">
+            <span class="nav-icon nav-icon-grid" aria-hidden="true"></span>
+            <span>Mis proyectos</span>
+          </a>
+          <a class="nav-item" href="#plantillas">
+            <span class="nav-icon nav-icon-page" aria-hidden="true"></span>
+            <span>Plantillas</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-rule"></div>
+        <div class="workspace-label">RECURSOS</div>
+        <nav class="primary-nav">
+          <a class="nav-item" href="#normas-iso">
+            <span class="nav-icon nav-icon-check" aria-hidden="true"></span>
+            <span>Normas ISO</span>
+          </a>
+          <a class="nav-item" href="#presupuestos">
+            <span class="nav-icon nav-icon-chart" aria-hidden="true"></span>
+            <span>Costos de referencia</span>
+          </a>
+        </nav>
+
+        <div class="sidebar-bottom">
+          <div class="help-note">
+            <span class="help-dot" aria-hidden="true"></span>
+            <div>
+              <strong>Modo de trabajo</strong>
+              <span>Planificacion estructurada</span>
+            </div>
+          </div>
+          <div class="profile-row">
+            <span class="avatar" aria-hidden="true">JP</span>
+            <span class="profile-copy"><strong>Julian Perez</strong><span>Cuenta personal</span></span>
+            <span class="profile-menu" aria-hidden="true">...</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="main-content" id="inicio">
+        <header class="topbar">
+          <div class="breadcrumb"><span>Proyectos</span><span class="breadcrumb-slash">/</span><strong>Nuevo plan</strong></div>
+          <div class="topbar-actions">
+            <span class="save-status"><span class="status-dot" aria-hidden="true"></span>Borrador sin guardar</span>
+            <button class="icon-button" type="button" aria-label="Notificaciones">
+              <span class="bell-icon" aria-hidden="true"></span>
+              <span class="notification-dot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </header>
+
+        <div class="page-content" id="nuevo-plan">
+          <section class="page-heading" aria-labelledby="page-title">
+            <div>
+              <p class="eyebrow">GENERADOR DE PROYECTOS <span class="eyebrow-line"></span> COLOMBIA</p>
+              <h1 id="page-title">Construye un plan con dirección.</h1>
+              <p class="heading-copy">Define el punto de partida. La estructura PHVA te ayudará a convertirlo en un plan claro y medible.</p>
+            </div>
+            <div class="heading-mark" aria-hidden="true"><span>01</span><span class="heading-mark-line"></span><span>PLAN</span></div>
+          </section>
+
+          <div class="workspace-grid">
+            <section class="form-panel" aria-labelledby="project-details-title">
+              <div class="panel-heading">
+                <div class="panel-step">01</div>
+                <div>
+                  <h2 id="project-details-title">Datos del proyecto</h2>
+                  <p>Empieza con la información esencial.</p>
+                </div>
+                <span class="required-note"><span aria-hidden="true">*</span> Obligatorio</span>
+              </div>
+
+              <form class="project-form">
+                <div class="field-group field-full">
+                  <label for="project-name">Nombre del proyecto <span aria-hidden="true">*</span></label>
+                  <input id="project-name" name="project-name" type="text" placeholder="Ej. Adecuacion de espacio comunitario" required>
+                </div>
+
+                <div class="field-row">
+                  <div class="field-group">
+                    <label for="project-sector">Sector o industria <span aria-hidden="true">*</span></label>
+                    <select id="project-sector" name="project-sector" required>
+                      <option value="" selected disabled>Selecciona un sector</option>
+                      <option>Construccion e infraestructura</option>
+                      <option>Educacion</option>
+                      <option>Salud</option>
+                      <option>Tecnologia</option>
+                      <option>Comercio y servicios</option>
+                      <option>Otro</option>
+                    </select>
+                  </div>
+                  <div class="field-group">
+                    <label for="project-location">Ubicacion en Colombia</label>
+                    <div class="input-with-icon">
+                      <span class="location-icon" aria-hidden="true"></span>
+                      <input id="project-location" name="project-location" type="text" placeholder="Ciudad o municipio">
+                    </div>
+                  </div>
+                </div>
+
+                <div class="field-row">
+                  <div class="field-group">
+                    <label for="project-budget">Presupuesto estimado</label>
+                    <div class="input-prefix"><span aria-hidden="true">$</span><input id="project-budget" name="project-budget" type="number" min="0" step="100000" placeholder="0"></div>
+                    <span class="field-hint">COP, antes de imprevistos e impuestos.</span>
+                  </div>
+                  <div class="field-group">
+                    <label for="project-duration">Duracion estimada</label>
+                    <div class="input-suffix"><input id="project-duration" name="project-duration" type="number" min="1" step="1" placeholder="Ej. 12"><span>semanas</span></div>
+                  </div>
+                </div>
+
+                <div class="field-group field-full">
+                  <label for="project-objective">Objetivo y alcance <span class="optional-label">Opcional</span></label>
+                  <textarea id="project-objective" name="project-objective" rows="4" placeholder="Que quieres lograr, para quien y que resultado esperas..."></textarea>
+                  <span class="field-hint">Un objetivo concreto facilita la priorizacion y la medicion de resultados.</span>
+                </div>
+
+                <div class="form-footer">
+                  <p><span class="lock-icon" aria-hidden="true"></span> Tu informacion permanece en este espacio de trabajo.</p>
+                  <button class="primary-button" type="button">Crear estructura del plan <span aria-hidden="true">&#8594;</span></button>
+                </div>
+              </form>
+            </section>
+
+            <aside class="side-column" aria-label="Estructura del plan">
+              <section class="phva-panel" id="phva" aria-labelledby="phva-title">
+                <div class="side-panel-topline"><span>METODOLOGIA</span><span class="phva-tag">PHVA</span></div>
+                <h2 id="phva-title">Un ciclo, cuatro momentos.</h2>
+                <p class="side-panel-copy">La calidad se integra desde la planeacion hasta la mejora continua.</p>
+
+                <ol class="phase-list">
+                  <li class="phase-item phase-plan">
+                    <span class="phase-symbol" aria-hidden="true">P</span>
+                    <span class="phase-copy"><strong>Planear</strong><span>Objetivos, alcance y recursos</span></span>
+                    <span class="phase-state">01</span>
+                  </li>
+                  <li class="phase-item phase-do">
+                    <span class="phase-symbol" aria-hidden="true">H</span>
+                    <span class="phase-copy"><strong>Hacer</strong><span>Actividades y responsables</span></span>
+                    <span class="phase-state">02</span>
+                  </li>
+                  <li class="phase-item phase-check">
+                    <span class="phase-symbol" aria-hidden="true">V</span>
+                    <span class="phase-copy"><strong>Verificar</strong><span>Indicadores y seguimiento</span></span>
+                    <span class="phase-state">03</span>
+                  </li>
+                  <li class="phase-item phase-act">
+                    <span class="phase-symbol" aria-hidden="true">A</span>
+                    <span class="phase-copy"><strong>Actuar</strong><span>Hallazgos y mejora continua</span></span>
+                    <span class="phase-state">04</span>
+                  </li>
+                </ol>
+                <div class="phva-footnote"><span aria-hidden="true">i</span> Ciclo de mejora continua basado en ISO 9001.</div>
+              </section>
+
+              <section class="next-panel" aria-labelledby="next-title">
+                <span class="next-kicker">DESPUES DE CREAR EL PLAN</span>
+                <h2 id="next-title">La estructura se adapta a tu proyecto.</h2>
+                <div class="next-tags"><span>Normas ISO</span><span>Presupuesto local</span><span>Riesgos y Pareto</span></div>
+                <span class="next-accent" aria-hidden="true"></span>
+              </section>
+            </aside>
+          </div>
+
+          <footer class="page-footer"><span>Proyecto Claro <span class="footer-separator">/</span> Planificacion con calidad</span><span>Valores de referencia en pesos colombianos (COP)</span></footer>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>
