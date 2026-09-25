@@ -989,6 +989,154 @@ h1 {
   font-size: 8px;
 }
 
+.generated-plan {
+  display: grid;
+  gap: 18px;
+  margin-top: 18px;
+  padding: 23px 25px;
+  border: 1px solid #e1e8df;
+  border-radius: 6px;
+  background: #fff;
+  animation: reveal-plan 260ms ease-out both;
+}
+
+.generated-plan[hidden] {
+  display: none;
+}
+
+.generated-plan-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid #edf0eb;
+}
+
+.generated-plan-heading .eyebrow {
+  margin-bottom: 8px;
+}
+
+.generated-plan-heading h2 {
+  margin: 0 0 6px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 20px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.generated-objective {
+  max-width: 720px;
+  margin: 0;
+  color: #748079;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.generated-badge {
+  flex: 0 0 auto;
+  padding: 6px 8px;
+  border-radius: 3px;
+  background: #f8eddf;
+  color: #a96838;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+}
+
+.project-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0 0 17px;
+  border-bottom: 1px solid #edf0eb;
+}
+
+.project-fact {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.project-fact dt {
+  color: #89938d;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+.project-fact dd {
+  margin: 0;
+  color: #34413a;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.generated-phases {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+}
+
+.generated-phase {
+  min-width: 0;
+  padding: 13px 12px 11px;
+  border: 1px solid #e9ede7;
+  border-radius: 4px;
+  background: #fcfdfa;
+}
+
+.generated-phase-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 11px;
+}
+
+.generated-phase-heading .phase-symbol {
+  width: 25px;
+  height: 25px;
+  flex-basis: 25px;
+}
+
+.generated-phase-heading h3 {
+  margin: 0;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.generated-phase ol {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 15px;
+  color: #748079;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+@keyframes reveal-plan {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .generated-plan {
+    animation: none;
+  }
+}
+
 .footer-separator {
   margin: 0 5px;
   color: #c1c8c2;
