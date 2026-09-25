@@ -10,7 +10,13 @@ const isoProgress = document.querySelector('#iso-progress');
 const isoProgressBar = document.querySelector('#iso-progress-bar');
 const budgetLines = document.querySelector('#budget-lines');
 const addBudgetLineButton = document.querySelector('#add-budget-line');
+const paretoInputs = document.querySelector('#pareto-inputs');
+const addParetoEntryButton = document.querySelector('#add-pareto-entry');
+const paretoResults = document.querySelector('#pareto-results');
+const paretoTotal = document.querySelector('#pareto-total');
+const paretoInsight = document.querySelector('#pareto-insight');
 let budgetLineCount = 0;
+let paretoEntryCount = 0;
 
 const phaseTemplates = [
   {
@@ -273,12 +279,133 @@ function renderBudgetLines() {
   addBudgetLine();
 }
 
+function addParetoEntry() {
+  paretoEntryCount += 1;
+  const entryNumber = paretoEntryCount;
+  const entry = document.createElement('div');
+  entry.className = 'pareto-input-row';
+  entry.dataset.paretoEntry = '';
+
+  const nameField = document.createElement('div');
+  nameField.className = 'budget-field pareto-name-field';
+  const nameId = `pareto-name-${entryNumber}`;
+  addTextElement(nameField, 'label', '', 'Causa o hallazgo').htmlFor = nameId;
+  const nameInput = document.createElement('input');
+  nameInput.id = nameId;
+  nameInput.type = 'text';
+  nameInput.dataset.paretoField = 'name';
+  nameInput.placeholder = 'Ej. Retrasos en entrega';
+  nameField.append(nameInput);
+  entry.append(nameField);
+
+  const countField = document.createElement('div');
+  countField.className = 'budget-field pareto-count-field';
+  const countId = `pareto-count-${entryNumber}`;
+  addTextElement(countField, 'label', '', 'Frecuencia').htmlFor = countId;
+  const countInput = document.createElement('input');
+  countInput.id = countId;
+  countInput.type = 'number';
+  countInput.min = '0';
+  countInput.step = '1';
+  countInput.placeholder = '0';
+  countInput.dataset.paretoField = 'frequency';
+  countField.append(countInput);
+  entry.append(countField);
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'remove-budget-line';
+  removeButton.type = 'button';
+  removeButton.setAttribute('aria-label', `Eliminar causa ${entryNumber}`);
+  removeButton.textContent = 'Eliminar';
+  removeButton.addEventListener('click', () => {
+    entry.remove();
+    updateParetoChart();
+  });
+  entry.append(removeButton);
+  paretoInputs.append(entry);
+  updateParetoChart();
+}
+
+function renderParetoEntries() {
+  paretoInputs.replaceChildren();
+  paretoEntryCount = 0;
+  addParetoEntry();
+}
+
+function updateParetoChart() {
+  const entries = Array.from(paretoInputs.querySelectorAll('[data-pareto-entry]'))
+    .map((entry) => ({
+      name: entry.querySelector('[data-pareto-field="name"]').value.trim(),
+      frequency: Math.max(0, Math.trunc(Number(entry.querySelector('[data-pareto-field="frequency"]').value) || 0)),
+    }))
+    .filter((entry) => entry.name && entry.frequency > 0)
+    .sort((left, right) => right.frequency - left.frequency || left.name.localeCompare(right.name, 'es'));
+
+  paretoResults.replaceChildren();
+  const total = entries.reduce((sum, entry) => sum + entry.frequency, 0);
+  paretoTotal.textContent = new Intl.NumberFormat('es-CO').format(total);
+
+  if (total === 0) {
+    paretoInsight.textContent = 'Agrega una causa con frecuencia mayor que cero para ver la priorizacion.';
+    return;
+  }
+
+  let cumulative = 0;
+  let thresholdIndex = -1;
+
+  entries.forEach((entry, index) => {
+    cumulative += entry.frequency;
+    const cumulativePercent = cumulative / total * 100;
+    if (thresholdIndex === -1 && cumulativePercent >= 80) {
+      thresholdIndex = index;
+    }
+
+    const result = document.createElement('li');
+    result.className = 'pareto-result';
+    addTextElement(result, 'span', 'pareto-rank', String(index + 1).padStart(2, '0'));
+
+    const detail = document.createElement('div');
+    detail.className = 'pareto-detail';
+    const heading = document.createElement('div');
+    heading.className = 'pareto-result-heading';
+    addTextElement(heading, 'strong', 'pareto-cause', entry.name);
+    addTextElement(heading, 'span', 'pareto-frequency', `${entry.frequency} ocurrencias`);
+    detail.append(heading);
+
+    const barTrack = document.createElement('div');
+    barTrack.className = 'pareto-bar-track';
+    const bar = document.createElement('span');
+    bar.className = 'pareto-bar';
+    bar.style.width = `${entry.frequency / entries[0].frequency * 100}%`;
+    barTrack.append(bar);
+    detail.append(barTrack);
+    result.append(detail);
+
+    const cumulativeMeter = document.createElement('div');
+    cumulativeMeter.className = 'pareto-cumulative';
+    const progress = document.createElement('progress');
+    progress.max = 100;
+    progress.value = cumulativePercent;
+    progress.setAttribute('aria-label', `${entry.name}: ${cumulativePercent.toFixed(1)} por ciento acumulado`);
+    cumulativeMeter.append(progress);
+    addTextElement(cumulativeMeter, 'span', '', `${cumulativePercent.toLocaleString('es-CO', { maximumFractionDigits: 1 })}%`);
+    result.append(cumulativeMeter);
+    paretoResults.append(result);
+  });
+
+  const thresholdPercent = (entries.slice(0, thresholdIndex + 1).reduce((sum, entry) => sum + entry.frequency, 0) / total * 100)
+    .toLocaleString('es-CO', { maximumFractionDigits: 1 });
+  paretoInsight.textContent = `Las primeras ${thresholdIndex + 1} causas concentran ${thresholdPercent}% de las ocurrencias (referencia: 80%).`;
+}
+
 addBudgetLineButton.addEventListener('click', addBudgetLine);
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
 document.querySelectorAll('.aiu-rate').forEach((input) => {
   input.addEventListener('input', updateBudgetTotals);
 });
+addParetoEntryButton.addEventListener('click', addParetoEntry);
+paretoInputs.addEventListener('input', updateParetoChart);
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -309,6 +436,7 @@ projectForm.addEventListener('submit', (event) => {
   }
   renderIsoChecklist();
   renderBudgetLines();
+  renderParetoEntries();
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';

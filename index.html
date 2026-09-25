@@ -256,6 +256,27 @@
                 </dl>
               </div>
             </section>
+
+            <section class="pareto-review" aria-labelledby="pareto-title">
+              <div class="budget-heading">
+                <div>
+                  <p class="iso-kicker">PRIORIZACION</p>
+                  <h3 id="pareto-title">Analisis de Pareto</h3>
+                  <p class="iso-description">Ordena causas o hallazgos segun su frecuencia observada.</p>
+                </div>
+                <button class="secondary-button" id="add-pareto-entry" type="button"><span aria-hidden="true">+</span> Agregar causa</button>
+              </div>
+              <p class="budget-disclaimer">Ingresa datos medidos del proyecto. El analisis no agrega causas ni frecuencias automaticamente.</p>
+              <div class="pareto-inputs" id="pareto-inputs" aria-label="Causas y frecuencias"></div>
+              <div class="pareto-output" aria-live="polite">
+                <div class="pareto-summary">
+                  <span>Total de ocurrencias</span>
+                  <strong id="pareto-total">0</strong>
+                  <p id="pareto-insight">Agrega una causa con frecuencia mayor que cero para ver la priorizacion.</p>
+                </div>
+                <ol class="pareto-results" id="pareto-results" aria-label="Causas ordenadas por frecuencia"></ol>
+              </div>
+            </section>
           </section>
 
           <footer class="page-footer"><span>Proyecto Claro <span class="footer-separator">/</span> Planificacion con calidad</span><span>Valores de referencia en pesos colombianos (COP)</span></footer>
