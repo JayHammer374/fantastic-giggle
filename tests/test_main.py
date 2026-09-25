@@ -72,6 +72,18 @@ class GeneratePlanTests(IsolatedAsyncioTestCase):
         self.assertEqual(response.json(), {"status": "ok", "provider_configured": True})
         self.assertNotIn("test-secret", response.text)
 
+    async def test_serves_only_public_frontend_files(self) -> None:
+        index_response = await self.client.get("/")
+        styles_response = await self.client.get("/styles.css")
+        script_response = await self.client.get("/app.js")
+        env_response = await self.client.get("/.env")
+
+        self.assertEqual(index_response.status_code, 200)
+        self.assertIn("Generar con IA", index_response.text)
+        self.assertEqual(styles_response.status_code, 200)
+        self.assertEqual(script_response.status_code, 200)
+        self.assertEqual(env_response.status_code, 404)
+
     async def test_generation_requires_server_side_credentials(self) -> None:
         with patch.dict(os.environ, {}, clear=True):
             response = await self.client.post("/api/v1/plans/generate", json=PROJECT_INPUT)

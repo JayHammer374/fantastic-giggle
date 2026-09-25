@@ -1,10 +1,11 @@
 import json
 import os
+from pathlib import Path
 from typing import Literal
 
 import httpx
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 
@@ -48,20 +49,22 @@ class PlanDraft(BaseModel):
 
 
 app = FastAPI(title="Proyecto Claro API", version="0.1.0")
-allowed_origins = [
-    origin.strip()
-    for origin in os.getenv(
-        "FRONTEND_ORIGINS",
-        "http://localhost:5500,http://127.0.0.1:5500",
-    ).split(",")
-    if origin.strip()
-]
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=allowed_origins,
-    allow_methods=["GET", "POST"],
-    allow_headers=["Content-Type"],
-)
+PUBLIC_FILES = Path(__file__).resolve().parent.parent
+
+
+@app.get("/", include_in_schema=False)
+async def serve_index() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "index.html")
+
+
+@app.get("/styles.css", include_in_schema=False)
+async def serve_styles() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "styles.css")
+
+
+@app.get("/app.js", include_in_schema=False)
+async def serve_script() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "app.js")
 
 
 def build_messages(project: ProjectRequest) -> list[dict[str, str]]:

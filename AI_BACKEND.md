@@ -1,9 +1,9 @@
 # Backend IA
 
-El backend expone `POST /api/v1/plans/generate` y `GET /health`. El generador usa un endpoint de chat completions compatible con OpenAI; las credenciales solo se leen desde el entorno del servidor.
+La aplicación y el backend se sirven desde el mismo origen. La API expone `POST /api/v1/plans/generate` y `GET /health`. El generador usa un endpoint de chat completions compatible con OpenAI; las credenciales solo se leen desde el entorno del servidor.
 
 1. Copia `.env.example` a `.env` y configura una API key, la URL base y el identificador del modelo de tu proveedor.
-2. Construye y ejecuta la API local:
+2. Construye y ejecuta la aplicación local:
 
 ```powershell
 docker build -t proyecto-claro-api .

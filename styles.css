@@ -1013,6 +1013,13 @@ h1 {
   border-bottom: 1px solid #edf0eb;
 }
 
+.generated-plan-actions {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
+  flex: 0 0 auto;
+}
+
 .generated-plan-heading .eyebrow {
   margin-bottom: 8px;
 }
@@ -1043,6 +1050,33 @@ h1 {
   font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.6px;
+}
+
+.ai-feedback {
+  margin: -5px 0 0;
+  padding: 10px 12px;
+  border-left: 2px solid #91ad79;
+  background: #f6f9f2;
+  color: #4f6651;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.ai-feedback.is-error {
+  border-left-color: #c9826b;
+  background: #fcf4f1;
+  color: #8a4f3e;
+}
+
+.ai-feedback[hidden] {
+  display: none;
+}
+
+.generated-phase-objective {
+  margin: -5px 0 10px;
+  color: #65746a;
+  font-size: 9px;
+  line-height: 1.5;
 }
 
 .project-facts {
@@ -2089,6 +2123,17 @@ h1 {
 
   .page-heading {
     margin-bottom: 20px;
+  }
+
+  .generated-plan-heading {
+    flex-direction: column;
+  }
+
+  .generated-plan-actions {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .heading-mark {
