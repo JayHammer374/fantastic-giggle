@@ -5,6 +5,9 @@ const planObjective = document.querySelector('#generated-objective');
 const projectFacts = document.querySelector('#project-facts');
 const generatedPhases = document.querySelector('#generated-phases');
 const draftStatus = document.querySelector('#draft-status');
+const isoChecklist = document.querySelector('#iso-checklist');
+const isoProgress = document.querySelector('#iso-progress');
+const isoProgressBar = document.querySelector('#iso-progress-bar');
 
 const phaseTemplates = [
   {
@@ -30,6 +33,33 @@ const phaseTemplates = [
     marker: 'A',
     className: 'phase-act',
     activities: ['Priorizar acciones correctivas', 'Asignar responsables de mejora', 'Actualizar el plan con lo aprendido'],
+  },
+];
+
+const isoChecklistItems = [
+  {
+    category: 'Contexto y alcance',
+    description: 'Identificar necesidades relevantes y delimitar alcance, entregables y exclusiones.',
+  },
+  {
+    category: 'Responsables y recursos',
+    description: 'Asignar responsables, recursos y autoridad para las actividades del proyecto.',
+  },
+  {
+    category: 'Informacion documentada',
+    description: 'Definir como crear, revisar, identificar y conservar documentos y evidencias.',
+  },
+  {
+    category: 'Ejecucion y cambios',
+    description: 'Registrar criterios de aceptacion, actividades realizadas y cambios autorizados.',
+  },
+  {
+    category: 'Seguimiento',
+    description: 'Definir indicadores, metas, frecuencia de revision y responsables del seguimiento.',
+  },
+  {
+    category: 'Mejora',
+    description: 'Registrar desviaciones, acciones correctivas y verificacion de resultados.',
   },
 ];
 
@@ -67,6 +97,39 @@ function renderPhase(phase) {
   generatedPhases.append(article);
 }
 
+function updateIsoProgress() {
+  const completedItems = isoChecklist.querySelectorAll('input[type="checkbox"]:checked').length;
+  isoProgress.textContent = `${completedItems} de ${isoChecklistItems.length} completados`;
+  isoProgressBar.value = completedItems;
+}
+
+function renderIsoChecklist() {
+  isoChecklist.replaceChildren();
+
+  isoChecklistItems.forEach((item, index) => {
+    const row = document.createElement('li');
+    row.className = 'iso-check-item';
+
+    const label = document.createElement('label');
+    label.className = 'iso-check-label';
+    label.htmlFor = `iso-control-${index + 1}`;
+
+    const checkbox = document.createElement('input');
+    checkbox.className = 'iso-checkbox';
+    checkbox.id = label.htmlFor;
+    checkbox.type = 'checkbox';
+    checkbox.addEventListener('change', updateIsoProgress);
+
+    addTextElement(label, 'span', 'iso-check-description', item.description);
+    label.prepend(checkbox);
+    addTextElement(row, 'span', 'iso-category', item.category);
+    row.prepend(label);
+    isoChecklist.append(row);
+  });
+
+  updateIsoProgress();
+}
+
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
@@ -94,6 +157,7 @@ projectForm.addEventListener('submit', (event) => {
   for (const phase of phaseTemplates) {
     renderPhase(phase);
   }
+  renderIsoChecklist();
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';
