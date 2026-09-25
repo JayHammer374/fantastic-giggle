@@ -1052,6 +1052,110 @@ h1 {
   letter-spacing: 0.6px;
 }
 
+.project-library {
+  display: grid;
+  gap: 18px;
+  padding-top: 8px;
+}
+
+.project-library[hidden],
+.library-empty[hidden] {
+  display: none;
+}
+
+.page-heading[hidden],
+.workspace-grid[hidden] {
+  display: none;
+}
+
+.project-library-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid var(--line);
+}
+
+.project-library-heading .eyebrow {
+  margin-bottom: 9px;
+}
+
+.project-library-heading h2 {
+  margin: 0 0 5px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.library-count {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.project-library-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.project-library-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  min-height: 76px;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.project-library-item h3 {
+  margin: 0 0 5px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.project-library-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.project-library-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.project-library-delete {
+  min-height: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: #985c4b;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.project-library-delete:hover {
+  background: #fbefeb;
+}
+
+.library-empty {
+  margin: 0;
+  padding: 30px 16px;
+  border: 1px dashed #d8ded6;
+  color: #77817c;
+  font-size: 11px;
+  text-align: center;
+}
+
 .ai-feedback {
   margin: -5px 0 0;
   padding: 10px 12px;
@@ -2133,7 +2237,22 @@ h1 {
     display: flex;
     width: 100%;
     align-items: center;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .project-library-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .project-library-item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .project-library-actions {
+    width: 100%;
   }
 
   .heading-mark {
@@ -2218,6 +2337,7 @@ h1 {
   .topbar,
   .page-heading,
   .workspace-grid,
+  .project-library,
   .page-footer {
     display: none !important;
   }

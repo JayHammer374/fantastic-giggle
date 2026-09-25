@@ -18,15 +18,15 @@
 
         <div class="workspace-label">ESPACIO DE TRABAJO</div>
         <nav class="primary-nav">
-          <a class="nav-item is-active" href="#nuevo-plan" aria-current="page">
+          <a class="nav-item is-active" id="nav-new-plan" href="#nuevo-plan" aria-label="Nuevo plan" title="Nuevo plan" aria-current="page">
             <span class="nav-icon nav-icon-plus" aria-hidden="true"></span>
             <span>Nuevo plan</span>
           </a>
-          <a class="nav-item" href="#planes">
+          <a class="nav-item" id="nav-my-projects" href="#planes" aria-label="Mis proyectos" title="Mis proyectos">
             <span class="nav-icon nav-icon-grid" aria-hidden="true"></span>
             <span>Mis proyectos</span>
           </a>
-          <a class="nav-item" href="#plantillas">
+          <a class="nav-item" href="#plantillas" aria-label="Plantillas" title="Plantillas">
             <span class="nav-icon nav-icon-page" aria-hidden="true"></span>
             <span>Plantillas</span>
           </a>
@@ -74,7 +74,7 @@
         </header>
 
         <div class="page-content" id="nuevo-plan">
-          <section class="page-heading" aria-labelledby="page-title">
+          <section class="page-heading" id="page-heading" aria-labelledby="page-title">
             <div>
               <p class="eyebrow">GENERADOR DE PROYECTOS <span class="eyebrow-line"></span> COLOMBIA</p>
               <h1 id="page-title">Construye un plan con dirección.</h1>
@@ -83,7 +83,20 @@
             <div class="heading-mark" aria-hidden="true"><span>01</span><span class="heading-mark-line"></span><span>PLAN</span></div>
           </section>
 
-          <div class="workspace-grid">
+          <section class="project-library" id="planes" aria-labelledby="project-library-title" hidden>
+            <div class="project-library-heading">
+              <div>
+                <p class="eyebrow">ESPACIO DE TRABAJO <span class="eyebrow-line"></span> ARCHIVO LOCAL</p>
+                <h2 id="project-library-title">Mis proyectos</h2>
+                <p id="project-library-count" class="library-count">0 proyectos guardados</p>
+              </div>
+              <button class="primary-button" id="new-project-from-library" type="button">Nuevo proyecto <span aria-hidden="true">+</span></button>
+            </div>
+            <p class="library-empty" id="project-library-empty" hidden>No hay proyectos guardados en este navegador.</p>
+            <ul class="project-library-list" id="project-library-list" aria-label="Proyectos guardados"></ul>
+          </section>
+
+          <div class="workspace-grid" id="new-project-workspace">
             <section class="form-panel" aria-labelledby="project-details-title">
               <div class="panel-heading">
                 <div class="panel-step">01</div>
@@ -196,6 +209,7 @@
               </div>
               <div class="generated-plan-actions">
                 <span class="generated-badge">BORRADOR</span>
+                <button class="secondary-button" id="save-project" type="button">Guardar proyecto</button>
                 <button class="secondary-button" id="print-plan" type="button">Exportar a PDF</button>
                 <button class="secondary-button" id="generate-ai-plan" type="button">Generar con IA</button>
               </div>

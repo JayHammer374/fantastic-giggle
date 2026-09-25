@@ -1,4 +1,14 @@
 const projectForm = document.querySelector('.project-form');
+const pageHeading = document.querySelector('#page-heading');
+const newProjectWorkspace = document.querySelector('#new-project-workspace');
+const projectLibrary = document.querySelector('#planes');
+const projectLibraryList = document.querySelector('#project-library-list');
+const projectLibraryCount = document.querySelector('#project-library-count');
+const projectLibraryEmpty = document.querySelector('#project-library-empty');
+const saveProjectButton = document.querySelector('#save-project');
+const newProjectFromLibraryButton = document.querySelector('#new-project-from-library');
+const newPlanNavigation = document.querySelector('#nav-new-plan');
+const myProjectsNavigation = document.querySelector('#nav-my-projects');
 const planResult = document.querySelector('#plan-result');
 const planTitle = document.querySelector('#generated-plan-title');
 const planObjective = document.querySelector('#generated-objective');
@@ -25,11 +35,13 @@ const legalChecklist = document.querySelector('#legal-checklist');
 const legalProgress = document.querySelector('#legal-progress');
 const legalProgressBar = document.querySelector('#legal-progress-bar');
 const localDraftKey = 'proyecto-claro:draft:v1';
+const localProjectsKey = 'proyecto-claro:projects:v1';
 let budgetLineCount = 0;
 let paretoEntryCount = 0;
 let resourceAssignmentCount = 0;
 let restoringDraft = false;
 let currentGeneratedPlan = null;
+let currentProjectId = null;
 
 const phaseTemplates = [
   {
@@ -736,6 +748,7 @@ function saveDraftState() {
 
   const state = {
     version: 1,
+    currentProjectId,
     form: Object.fromEntries(new FormData(projectForm)),
     isoChecklist: Array.from(isoChecklist.querySelectorAll('input[type="checkbox"]'), (input) => input.checked),
     budgetLines: serializeRows(budgetLines, '[data-budget-line]', '[data-budget-field]', 'budgetField'),
@@ -748,6 +761,9 @@ function saveDraftState() {
 
   try {
     window.localStorage.setItem(localDraftKey, JSON.stringify(state));
+    if (currentProjectId) {
+      upsertProjectRecord(state);
+    }
     draftStatus.textContent = currentGeneratedPlan?.mode === 'ai'
       ? 'Borrador IA guardado en este navegador'
       : 'Borrador guardado en este navegador';
@@ -756,17 +772,19 @@ function saveDraftState() {
   }
 }
 
-function restoreDraftState() {
-  let state;
-  try {
-    const savedDraft = window.localStorage.getItem(localDraftKey);
-    if (!savedDraft) {
+function restoreDraftState(savedState = null) {
+  let state = savedState;
+  if (!state) {
+    try {
+      const savedDraft = window.localStorage.getItem(localDraftKey);
+      if (!savedDraft) {
+        return;
+      }
+      state = JSON.parse(savedDraft);
+    } catch {
+      draftStatus.textContent = 'No se pudo leer el borrador local';
       return;
     }
-    state = JSON.parse(savedDraft);
-  } catch {
-    draftStatus.textContent = 'No se pudo leer el borrador local';
-    return;
   }
 
   if (!state || typeof state !== 'object' || state.version !== 1 || !state.form || typeof state.form !== 'object') {
@@ -775,6 +793,8 @@ function restoreDraftState() {
 
   restoringDraft = true;
   try {
+    currentProjectId = state.currentProjectId || null;
+    updateSaveProjectButton();
     for (const [name, value] of Object.entries(state.form)) {
       const field = projectForm.elements.namedItem(name);
       if (field) {
@@ -827,6 +847,166 @@ function restoreDraftState() {
   }
 }
 
+function getSavedProjects() {
+  try {
+    const projects = JSON.parse(window.localStorage.getItem(localProjectsKey) || '[]');
+    return Array.isArray(projects) ? projects : [];
+  } catch {
+    return [];
+  }
+}
+
+function upsertProjectRecord(draft) {
+  const formData = new FormData(projectForm);
+  const sectorField = projectForm.elements.namedItem('project-sector');
+  const project = {
+    id: currentProjectId,
+    name: formData.get('project-name').trim(),
+    sector: sectorField.options[sectorField.selectedIndex].text,
+    updatedAt: new Date().toISOString(),
+    draft,
+  };
+  const projects = getSavedProjects().filter((savedProject) => savedProject.id !== currentProjectId);
+  projects.unshift(project);
+  window.localStorage.setItem(localProjectsKey, JSON.stringify(projects));
+  if (!projectLibrary.hidden) {
+    renderProjectLibrary();
+  }
+}
+
+function updateSaveProjectButton() {
+  saveProjectButton.textContent = currentProjectId ? 'Actualizar proyecto' : 'Guardar proyecto';
+}
+
+function saveProjectToLibrary() {
+  if (planResult.hidden || !projectForm.checkValidity()) {
+    return;
+  }
+  if (!currentProjectId) {
+    currentProjectId = globalThis.crypto?.randomUUID?.() || `project-${Date.now()}`;
+  }
+  updateSaveProjectButton();
+  saveDraftState();
+  draftStatus.textContent = 'Proyecto guardado en este navegador';
+  renderProjectLibrary();
+}
+
+function renderProjectLibrary() {
+  const projects = getSavedProjects().filter((project) => project && project.id && project.draft);
+  projectLibraryList.replaceChildren();
+  projectLibraryCount.textContent = `${projects.length} ${projects.length === 1 ? 'proyecto guardado' : 'proyectos guardados'}`;
+  projectLibraryEmpty.hidden = projects.length > 0;
+
+  for (const project of projects) {
+    const row = document.createElement('li');
+    row.className = 'project-library-item';
+    const details = document.createElement('div');
+    addTextElement(details, 'h3', '', project.name || 'Proyecto sin nombre');
+    const updatedAt = new Date(project.updatedAt);
+    const updatedText = Number.isNaN(updatedAt.valueOf())
+      ? 'Fecha no disponible'
+      : `Actualizado ${updatedAt.toLocaleString('es-CO')}`;
+    addTextElement(details, 'p', '', `${project.sector || 'Sector sin definir'} · ${updatedText}`);
+    row.append(details);
+
+    const actions = document.createElement('div');
+    actions.className = 'project-library-actions';
+    const openButton = document.createElement('button');
+    openButton.className = 'secondary-button';
+    openButton.type = 'button';
+    openButton.textContent = 'Abrir';
+    openButton.addEventListener('click', () => openSavedProject(project.id));
+    actions.append(openButton);
+
+    const deleteButton = document.createElement('button');
+    deleteButton.className = 'project-library-delete';
+    deleteButton.type = 'button';
+    deleteButton.textContent = 'Eliminar';
+    deleteButton.setAttribute('aria-label', `Eliminar ${project.name || 'proyecto'}`);
+    deleteButton.addEventListener('click', () => deleteSavedProject(project.id));
+    actions.append(deleteButton);
+    row.append(actions);
+    projectLibraryList.append(row);
+  }
+}
+
+function setActiveNavigation(activeLink) {
+  for (const link of [newPlanNavigation, myProjectsNavigation]) {
+    const isActive = link === activeLink;
+    link.classList.toggle('is-active', isActive);
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  }
+}
+
+function showProjectLibrary() {
+  saveDraftState();
+  pageHeading.hidden = true;
+  newProjectWorkspace.hidden = true;
+  planResult.hidden = true;
+  projectLibrary.hidden = false;
+  renderProjectLibrary();
+  setActiveNavigation(myProjectsNavigation);
+  window.history.replaceState(null, '', '#planes');
+}
+
+function showNewPlanView() {
+  projectLibrary.hidden = true;
+  pageHeading.hidden = false;
+  newProjectWorkspace.hidden = false;
+  planResult.hidden = !currentGeneratedPlan;
+  setActiveNavigation(newPlanNavigation);
+  window.history.replaceState(null, '', '#nuevo-plan');
+}
+
+function openSavedProject(projectId) {
+  const project = getSavedProjects().find((savedProject) => savedProject.id === projectId);
+  if (!project) {
+    return;
+  }
+  restoreDraftState(project.draft);
+  if (planResult.hidden) {
+    return;
+  }
+  showNewPlanView();
+  draftStatus.textContent = `Proyecto abierto: ${project.name}`;
+}
+
+function deleteSavedProject(projectId) {
+  const project = getSavedProjects().find((savedProject) => savedProject.id === projectId);
+  if (!project || !window.confirm(`Eliminar el proyecto "${project.name}" de este navegador?`)) {
+    return;
+  }
+
+  const projects = getSavedProjects().filter((savedProject) => savedProject.id !== projectId);
+  window.localStorage.setItem(localProjectsKey, JSON.stringify(projects));
+  if (currentProjectId === projectId) {
+    currentProjectId = null;
+    window.localStorage.removeItem(localDraftKey);
+    updateSaveProjectButton();
+  }
+  renderProjectLibrary();
+}
+
+function startNewProject() {
+  const hasUnsavedDraft = !currentProjectId && Boolean(window.localStorage.getItem(localDraftKey));
+  if (hasUnsavedDraft && !window.confirm('Descartar el borrador sin guardar y empezar otro?')) {
+    return;
+  }
+  currentProjectId = null;
+  currentGeneratedPlan = null;
+  window.localStorage.removeItem(localDraftKey);
+  projectForm.reset();
+  planResult.hidden = true;
+  aiFeedback.hidden = true;
+  draftStatus.textContent = 'Borrador sin guardar';
+  updateSaveProjectButton();
+  showNewPlanView();
+}
+
 addBudgetLineButton.addEventListener('click', addBudgetLine);
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
@@ -844,6 +1024,24 @@ document.addEventListener('change', saveDraftState);
 document.addEventListener('click', saveDraftState);
 generateAiPlanButton.addEventListener('click', generatePlanWithAI);
 printPlanButton.addEventListener('click', () => window.print());
+saveProjectButton.addEventListener('click', saveProjectToLibrary);
+newPlanNavigation.addEventListener('click', (event) => {
+  event.preventDefault();
+  startNewProject();
+});
+myProjectsNavigation.addEventListener('click', (event) => {
+  event.preventDefault();
+  showProjectLibrary();
+});
+newProjectFromLibraryButton.addEventListener('click', startNewProject);
+
+function syncViewWithLocationHash() {
+  if (window.location.hash === '#planes') {
+    showProjectLibrary();
+  } else if (window.location.hash === '#nuevo-plan' && !projectLibrary.hidden) {
+    showNewPlanView();
+  }
+}
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -884,3 +1082,5 @@ projectForm.addEventListener('submit', (event) => {
 });
 
 restoreDraftState();
+window.addEventListener('DOMContentLoaded', syncViewWithLocationHash, { once: true });
+window.addEventListener('hashchange', syncViewWithLocationHash);
