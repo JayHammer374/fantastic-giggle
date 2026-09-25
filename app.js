@@ -34,6 +34,11 @@ const resourceSummary = document.querySelector('#resource-summary');
 const legalChecklist = document.querySelector('#legal-checklist');
 const legalProgress = document.querySelector('#legal-progress');
 const legalProgressBar = document.querySelector('#legal-progress-bar');
+const budgetImportFile = document.querySelector('#budget-import-file');
+const importBudgetQuotesButton = document.querySelector('#import-budget-quotes');
+const exportBudgetTemplateButton = document.querySelector('#export-budget-template');
+const exportBudgetQuotesButton = document.querySelector('#export-budget-quotes');
+const budgetImportStatus = document.querySelector('#budget-import-status');
 const localDraftKey = 'proyecto-claro:draft:v1';
 const localProjectsKey = 'proyecto-claro:projects:v1';
 let budgetLineCount = 0;
@@ -69,6 +74,8 @@ const phaseTemplates = [
     activities: ['Priorizar acciones correctivas', 'Asignar responsables de mejora', 'Actualizar el plan con lo aprendido'],
   },
 ];
+
+const budgetUnits = ['Unidad', 'Hora', 'Jornada', 'm', 'm2', 'm3', 'kg', 'Litro', 'Servicio'];
 
 const isoChecklistItems = [
   {
@@ -399,7 +406,7 @@ function addBudgetLine() {
   const unitSelect = document.createElement('select');
   unitSelect.id = unitId;
   unitSelect.dataset.budgetField = 'unit';
-  for (const unit of ['Unidad', 'Hora', 'Jornada', 'm', 'm2', 'm3', 'kg', 'Litro', 'Servicio']) {
+  for (const unit of budgetUnits) {
     const option = document.createElement('option');
     option.value = unit;
     option.textContent = unit;
@@ -437,6 +444,152 @@ function addBudgetLine() {
   line.append(fields);
   budgetLines.append(line);
   updateBudgetTotals();
+}
+
+function downloadJsonFile(filename, contents) {
+  const blob = new Blob([JSON.stringify(contents, null, 2)], { type: 'application/json' });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = downloadUrl;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(downloadUrl);
+}
+
+function exportBudgetTemplate() {
+  downloadJsonFile('plantilla-cotizaciones-cop.json', {
+    schemaVersion: 1,
+    currency: 'COP',
+    items: [{
+      description: '',
+      unit: 'Unidad',
+      quantity: 0,
+      unitCostCop: 0,
+      wastePercent: 0,
+      source: '',
+      sourceUrl: '',
+      quoteDate: '',
+    }],
+  });
+}
+
+function exportBudgetQuotes() {
+  const items = Array.from(budgetLines.querySelectorAll('[data-budget-line]'), (line) => {
+    const read = (field) => line.querySelector(`[data-budget-field="${field}"]`).value;
+    return {
+      description: read('description').trim(),
+      unit: read('unit'),
+      quantity: Number(read('quantity')) || 0,
+      unitCostCop: Number(read('unit-cost')) || 0,
+      wastePercent: Number(read('waste-rate')) || 0,
+      source: read('source').trim(),
+      sourceUrl: read('source-url').trim(),
+      quoteDate: read('quote-date'),
+    };
+  }).filter((item) => item.description || item.source || item.quantity > 0 || item.unitCostCop > 0);
+
+  downloadJsonFile(`cotizaciones-cop-${new Date().toISOString().slice(0, 10)}.json`, {
+    schemaVersion: 1,
+    currency: 'COP',
+    items,
+  });
+}
+
+function validateBudgetCatalog(catalog) {
+  if (catalog?.schemaVersion !== 1 || catalog.currency !== 'COP' || !Array.isArray(catalog.items)) {
+    throw new Error('El archivo debe usar schemaVersion 1, currency COP y una lista items.');
+  }
+  if (catalog.items.length === 0 || catalog.items.length > 100) {
+    throw new Error('El archivo debe contener entre 1 y 100 partidas.');
+  }
+
+  return catalog.items.map((item, index) => {
+    if (!item || typeof item.description !== 'string' || !item.description.trim() || item.description.length > 200) {
+      throw new Error(`La partida ${index + 1} requiere una descripcion de hasta 200 caracteres.`);
+    }
+    if (!budgetUnits.includes(item.unit)) {
+      throw new Error(`La unidad de la partida ${index + 1} no esta permitida.`);
+    }
+    for (const [field, label] of [['quantity', 'cantidad'], ['unitCostCop', 'precio unitario'], ['wastePercent', 'desperdicio']]) {
+      if (typeof item[field] !== 'number' || !Number.isFinite(item[field]) || item[field] < 0) {
+        throw new Error(`El campo ${label} de la partida ${index + 1} debe ser un numero igual o mayor que cero.`);
+      }
+    }
+    if (typeof item.source !== 'string' || !item.source.trim() || typeof item.sourceUrl !== 'string' || !item.sourceUrl.trim() || typeof item.quoteDate !== 'string' || !item.quoteDate) {
+      throw new Error(`La partida ${index + 1} requiere proveedor, URL y fecha de cotizacion.`);
+    }
+    if (item.sourceUrl) {
+      let url;
+      try {
+        url = new URL(item.sourceUrl);
+      } catch {
+        throw new Error(`La URL de la partida ${index + 1} no es valida.`);
+      }
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        throw new Error(`La URL de la partida ${index + 1} debe usar HTTP o HTTPS.`);
+      }
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(item.quoteDate)) {
+      throw new Error(`La fecha de la partida ${index + 1} debe usar el formato AAAA-MM-DD.`);
+    }
+    const quoteDate = new Date(`${item.quoteDate}T00:00:00Z`);
+    if (Number.isNaN(quoteDate.valueOf()) || quoteDate.toISOString().slice(0, 10) !== item.quoteDate) {
+      throw new Error(`La fecha de la partida ${index + 1} no existe en el calendario.`);
+    }
+
+    return {
+      description: item.description.trim(),
+      unit: item.unit,
+      quantity: String(item.quantity),
+      'unit-cost': String(item.unitCostCop),
+      'waste-rate': String(item.wastePercent),
+      source: item.source.trim(),
+      'source-url': item.sourceUrl.trim(),
+      'quote-date': item.quoteDate,
+    };
+  });
+}
+
+async function importBudgetFile(file) {
+  if (file.size > 1024 * 1024) {
+    throw new Error('El archivo supera el limite de 1 MB.');
+  }
+
+  let catalog;
+  try {
+    catalog = JSON.parse(await file.text());
+  } catch {
+    throw new Error('El archivo no contiene JSON valido.');
+  }
+  const items = validateBudgetCatalog(catalog);
+  const currentLines = Array.from(budgetLines.querySelectorAll('[data-budget-line]'));
+  const currentLinesAreBlank = currentLines.every((line) => {
+    return Array.from(line.querySelectorAll('[data-budget-field]')).every((field) => (
+      field.dataset.budgetField === 'unit' || !field.value.trim()
+    ));
+  });
+  if (currentLinesAreBlank) {
+    budgetLines.replaceChildren();
+    budgetLineCount = 0;
+  }
+
+  for (const item of items) {
+    addBudgetLine();
+    const row = budgetLines.lastElementChild;
+    for (const [key, value] of Object.entries(item)) {
+      const field = row.querySelector(`[data-budget-field="${key}"]`);
+      field.value = value;
+      if (field.type === 'url') {
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+  }
+
+  updateBudgetTotals();
+  saveDraftState();
+  budgetImportStatus.hidden = false;
+  budgetImportStatus.classList.remove('is-error');
+  budgetImportStatus.textContent = `${items.length} partidas importadas desde JSON COP.`;
 }
 
 function updateBudgetTotals() {
@@ -1008,6 +1161,24 @@ function startNewProject() {
 }
 
 addBudgetLineButton.addEventListener('click', addBudgetLine);
+importBudgetQuotesButton.addEventListener('click', () => budgetImportFile.click());
+exportBudgetTemplateButton.addEventListener('click', exportBudgetTemplate);
+exportBudgetQuotesButton.addEventListener('click', exportBudgetQuotes);
+budgetImportFile.addEventListener('change', async () => {
+  const [file] = budgetImportFile.files;
+  if (!file) {
+    return;
+  }
+  try {
+    await importBudgetFile(file);
+  } catch (error) {
+    budgetImportStatus.hidden = false;
+    budgetImportStatus.classList.add('is-error');
+    budgetImportStatus.textContent = error.message;
+  } finally {
+    budgetImportFile.value = '';
+  }
+});
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
 document.querySelectorAll('.aiu-rate').forEach((input) => {
