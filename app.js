@@ -21,9 +21,11 @@ const resourceSummary = document.querySelector('#resource-summary');
 const legalChecklist = document.querySelector('#legal-checklist');
 const legalProgress = document.querySelector('#legal-progress');
 const legalProgressBar = document.querySelector('#legal-progress-bar');
+const localDraftKey = 'proyecto-claro:draft:v1';
 let budgetLineCount = 0;
 let paretoEntryCount = 0;
 let resourceAssignmentCount = 0;
+let restoringDraft = false;
 
 const phaseTemplates = [
   {
@@ -581,6 +583,138 @@ function updateResourceSummary() {
   }
 }
 
+function serializeRows(container, rowSelector, fieldSelector, datasetKey) {
+  return Array.from(container.querySelectorAll(rowSelector), (row) => {
+    return Object.fromEntries(Array.from(row.querySelectorAll(fieldSelector), (field) => [
+      field.dataset[datasetKey],
+      field.value,
+    ]));
+  });
+}
+
+function restoreRows(container, records, addRow, rowSelector, fieldSelector, datasetKey) {
+  if (!Array.isArray(records)) {
+    return;
+  }
+
+  let rows = Array.from(container.querySelectorAll(rowSelector));
+  while (rows.length < records.length) {
+    addRow();
+    rows = Array.from(container.querySelectorAll(rowSelector));
+  }
+  while (rows.length > records.length) {
+    rows.pop().remove();
+  }
+
+  rows.forEach((row, index) => {
+    for (const field of row.querySelectorAll(fieldSelector)) {
+      const value = records[index][field.dataset[datasetKey]];
+      if (value !== undefined) {
+        field.value = value;
+        if (field.type === 'url') {
+          field.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+      }
+    }
+  });
+}
+
+function saveDraftState() {
+  if (restoringDraft || planResult.hidden) {
+    return;
+  }
+  if (!projectForm.checkValidity()) {
+    draftStatus.textContent = 'Completa los campos requeridos para guardar';
+    return;
+  }
+
+  const state = {
+    version: 1,
+    form: Object.fromEntries(new FormData(projectForm)),
+    isoChecklist: Array.from(isoChecklist.querySelectorAll('input[type="checkbox"]'), (input) => input.checked),
+    budgetLines: serializeRows(budgetLines, '[data-budget-line]', '[data-budget-field]', 'budgetField'),
+    aiuRates: Object.fromEntries(Array.from(document.querySelectorAll('.aiu-rate'), (input) => [input.dataset.aiuRate, input.value])),
+    paretoEntries: serializeRows(paretoInputs, '[data-pareto-entry]', '[data-pareto-field]', 'paretoField'),
+    resourceAssignments: serializeRows(resourceAssignments, '[data-resource-assignment]', '[data-resource-field]', 'resourceField'),
+    legalStatuses: Array.from(legalChecklist.querySelectorAll('.legal-status'), (select) => select.value),
+  };
+
+  try {
+    window.localStorage.setItem(localDraftKey, JSON.stringify(state));
+    draftStatus.textContent = 'Borrador guardado en este navegador';
+  } catch {
+    draftStatus.textContent = 'No se pudo guardar el borrador localmente';
+  }
+}
+
+function restoreDraftState() {
+  let state;
+  try {
+    const savedDraft = window.localStorage.getItem(localDraftKey);
+    if (!savedDraft) {
+      return;
+    }
+    state = JSON.parse(savedDraft);
+  } catch {
+    draftStatus.textContent = 'No se pudo leer el borrador local';
+    return;
+  }
+
+  if (!state || typeof state !== 'object' || state.version !== 1 || !state.form || typeof state.form !== 'object') {
+    return;
+  }
+
+  restoringDraft = true;
+  try {
+    for (const [name, value] of Object.entries(state.form)) {
+      const field = projectForm.elements.namedItem(name);
+      if (field) {
+        field.value = value;
+      }
+    }
+
+    if (!projectForm.checkValidity()) {
+      return;
+    }
+    projectForm.requestSubmit();
+    if (planResult.hidden) {
+      return;
+    }
+
+    restoreRows(budgetLines, state.budgetLines, addBudgetLine, '[data-budget-line]', '[data-budget-field]', 'budgetField');
+    for (const [name, value] of Object.entries(state.aiuRates || {})) {
+      const field = document.querySelector(`[data-aiu-rate="${name}"]`);
+      if (field) {
+        field.value = value;
+      }
+    }
+    updateBudgetTotals();
+
+    restoreRows(paretoInputs, state.paretoEntries, addParetoEntry, '[data-pareto-entry]', '[data-pareto-field]', 'paretoField');
+    updateParetoChart();
+
+    restoreRows(resourceAssignments, state.resourceAssignments, addResourceAssignment, '[data-resource-assignment]', '[data-resource-field]', 'resourceField');
+    updateResourceSummary();
+
+    isoChecklist.querySelectorAll('input[type="checkbox"]').forEach((input, index) => {
+      input.checked = Boolean(state.isoChecklist?.[index]);
+    });
+    updateIsoProgress();
+
+    legalChecklist.querySelectorAll('.legal-status').forEach((select, index) => {
+      select.value = state.legalStatuses?.[index] || 'pending';
+    });
+    updateLegalProgress();
+
+    draftStatus.textContent = 'Borrador restaurado de este navegador';
+    window.scrollTo(0, 0);
+  } catch {
+    draftStatus.textContent = 'No se pudo restaurar el borrador local';
+  } finally {
+    restoringDraft = false;
+  }
+}
+
 addBudgetLineButton.addEventListener('click', addBudgetLine);
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
@@ -593,6 +727,9 @@ addResourceAssignmentButton.addEventListener('click', addResourceAssignment);
 resourceAssignments.addEventListener('input', updateResourceSummary);
 resourceAssignments.addEventListener('change', updateResourceSummary);
 legalChecklist.addEventListener('change', updateLegalProgress);
+document.addEventListener('input', saveDraftState);
+document.addEventListener('change', saveDraftState);
+document.addEventListener('click', saveDraftState);
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -629,5 +766,8 @@ projectForm.addEventListener('submit', (event) => {
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';
+  saveDraftState();
   planResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
+
+restoreDraftState();
