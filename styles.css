@@ -2190,3 +2190,117 @@ h1 {
     line-height: 1.5;
   }
 }
+
+@page {
+  size: A4;
+  margin: 14mm;
+}
+
+@media print {
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    min-width: 0;
+    background: #fff;
+    color: #202d29;
+    font-size: 9pt;
+  }
+
+  .app-shell {
+    display: block;
+    min-height: 0;
+  }
+
+  .sidebar,
+  .topbar,
+  .page-heading,
+  .workspace-grid,
+  .page-footer {
+    display: none !important;
+  }
+
+  .main-content,
+  .page-content {
+    width: auto;
+    margin: 0;
+    padding: 0;
+  }
+
+  .generated-plan {
+    display: grid !important;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    animation: none;
+  }
+
+  .generated-plan[hidden] {
+    display: none !important;
+  }
+
+  .generated-plan-heading {
+    break-after: avoid;
+    padding-bottom: 10px;
+  }
+
+  .generated-plan-actions {
+    display: flex;
+    align-items: center;
+  }
+
+  #print-plan,
+  #generate-ai-plan,
+  #ai-feedback,
+  #add-budget-line,
+  #add-pareto-entry,
+  #add-resource-assignment,
+  .remove-budget-line {
+    display: none !important;
+  }
+
+  .generated-phases {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .generated-phase,
+  .iso-check-item,
+  .budget-line,
+  .pareto-result,
+  .resource-assignment,
+  .legal-check-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .generated-plan-heading h2,
+  .iso-review h3,
+  .budget-review h3,
+  .pareto-review h3,
+  .resource-review h3,
+  .legal-review h3 {
+    break-after: avoid;
+  }
+
+  .budget-field input,
+  .budget-field select {
+    height: auto;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #202d29;
+    appearance: none;
+    -webkit-appearance: none;
+    box-shadow: none;
+  }
+
+  .budget-source-link:not([hidden])::after {
+    content: ' (' attr(href) ')';
+    color: #59655f;
+    font-size: 7pt;
+    overflow-wrap: anywhere;
+  }
+}

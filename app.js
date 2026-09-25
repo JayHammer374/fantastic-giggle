@@ -5,6 +5,7 @@ const planObjective = document.querySelector('#generated-objective');
 const projectFacts = document.querySelector('#project-facts');
 const generatedPhases = document.querySelector('#generated-phases');
 const generateAiPlanButton = document.querySelector('#generate-ai-plan');
+const printPlanButton = document.querySelector('#print-plan');
 const aiFeedback = document.querySelector('#ai-feedback');
 const draftStatus = document.querySelector('#draft-status');
 const isoChecklist = document.querySelector('#iso-checklist');
@@ -842,6 +843,7 @@ document.addEventListener('input', saveDraftState);
 document.addEventListener('change', saveDraftState);
 document.addEventListener('click', saveDraftState);
 generateAiPlanButton.addEventListener('click', generatePlanWithAI);
+printPlanButton.addEventListener('click', () => window.print());
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
