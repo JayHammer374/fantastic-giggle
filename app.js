@@ -18,6 +18,9 @@ const paretoInsight = document.querySelector('#pareto-insight');
 const resourceAssignments = document.querySelector('#resource-assignments');
 const addResourceAssignmentButton = document.querySelector('#add-resource-assignment');
 const resourceSummary = document.querySelector('#resource-summary');
+const legalChecklist = document.querySelector('#legal-checklist');
+const legalProgress = document.querySelector('#legal-progress');
+const legalProgressBar = document.querySelector('#legal-progress-bar');
 let budgetLineCount = 0;
 let paretoEntryCount = 0;
 let resourceAssignmentCount = 0;
@@ -76,6 +79,37 @@ const isoChecklistItems = [
   },
 ];
 
+const legalChecklistItems = [
+  {
+    area: 'Permisos y autorizaciones',
+    question: '¿La ubicacion o actividad requiere permisos, licencias o conceptos de una entidad competente?',
+  },
+  {
+    area: 'Contratacion y obligaciones',
+    question: '¿Se definieron modalidad contractual, alcance, entregables, aceptacion y control de cambios?',
+  },
+  {
+    area: 'Trabajo y seguridad',
+    question: '¿Se revisaron las obligaciones aplicables a trabajadores, contratistas y seguridad en el trabajo?',
+  },
+  {
+    area: 'Impuestos y facturacion',
+    question: '¿Se validaron impuestos, retenciones y requisitos de facturacion con apoyo contable?',
+  },
+  {
+    area: 'Datos personales',
+    question: '¿El proyecto trata datos personales y necesita controles, avisos o autorizaciones?',
+  },
+  {
+    area: 'Polizas y garantias',
+    question: '¿El contrato, entidad o modalidad exige polizas o garantias especificas?',
+  },
+  {
+    area: 'Ambiente y territorio',
+    question: '¿La actividad requiere validar permisos ambientales, uso del suelo o restricciones territoriales?',
+  },
+];
+
 function addTextElement(parent, tagName, className, text) {
   const element = document.createElement(tagName);
   element.className = className;
@@ -114,6 +148,45 @@ function updateIsoProgress() {
   const completedItems = isoChecklist.querySelectorAll('input[type="checkbox"]:checked').length;
   isoProgress.textContent = `${completedItems} de ${isoChecklistItems.length} completados`;
   isoProgressBar.value = completedItems;
+}
+
+function updateLegalProgress() {
+  const statuses = Array.from(legalChecklist.querySelectorAll('select')).map((select) => select.value);
+  const verified = statuses.filter((status) => status === 'verified').length;
+  const notApplicable = statuses.filter((status) => status === 'not-applicable').length;
+  const reviewed = verified + notApplicable;
+  legalProgress.textContent = `${reviewed} de ${legalChecklistItems.length} revisados (${verified} verificados, ${notApplicable} no aplican)`;
+  legalProgressBar.value = reviewed;
+}
+
+function renderLegalChecklist() {
+  legalChecklist.replaceChildren();
+
+  legalChecklistItems.forEach((item, index) => {
+    const row = document.createElement('li');
+    row.className = 'legal-check-item';
+
+    const description = document.createElement('div');
+    description.className = 'legal-check-copy';
+    addTextElement(description, 'strong', '', item.area);
+    addTextElement(description, 'span', '', item.question);
+
+    const select = document.createElement('select');
+    select.className = 'legal-status';
+    select.setAttribute('aria-label', `Estado: ${item.area}`);
+    select.dataset.legalIndex = String(index);
+    for (const [value, label] of [['pending', 'Pendiente'], ['verified', 'Verificado'], ['not-applicable', 'No aplica']]) {
+      const option = document.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.append(option);
+    }
+
+    row.append(description, select);
+    legalChecklist.append(row);
+  });
+
+  updateLegalProgress();
 }
 
 function renderIsoChecklist() {
@@ -519,6 +592,7 @@ paretoInputs.addEventListener('input', updateParetoChart);
 addResourceAssignmentButton.addEventListener('click', addResourceAssignment);
 resourceAssignments.addEventListener('input', updateResourceSummary);
 resourceAssignments.addEventListener('change', updateResourceSummary);
+legalChecklist.addEventListener('change', updateLegalProgress);
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -551,6 +625,7 @@ projectForm.addEventListener('submit', (event) => {
   renderBudgetLines();
   renderParetoEntries();
   renderResourceAssignments();
+  renderLegalChecklist();
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';
