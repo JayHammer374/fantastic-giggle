@@ -1647,6 +1647,77 @@ h1 {
   background: var(--green);
 }
 
+.resource-review {
+  display: grid;
+  gap: 13px;
+  padding-top: 19px;
+  border-top: 1px solid #edf0eb;
+}
+
+.resource-assignments {
+  display: grid;
+  gap: 9px;
+}
+
+.resource-assignment {
+  position: relative;
+  min-width: 0;
+  margin: 0;
+  padding: 14px 12px 12px;
+  border: 1px solid #e5e9e3;
+  border-radius: 5px;
+}
+
+.resource-assignment-fields {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+  padding-top: 6px;
+}
+
+.resource-field--person {
+  grid-column: span 4;
+}
+
+.resource-field--role,
+.resource-field--phase {
+  grid-column: span 3;
+}
+
+.resource-field--hours {
+  grid-column: span 2;
+}
+
+.resource-summary {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.resource-summary > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e9ede7;
+  border-radius: 4px;
+  background: #fcfdfa;
+}
+
+.resource-summary dt {
+  color: #818d85;
+  font-size: 8px;
+}
+
+.resource-summary dd {
+  margin: 0;
+  color: #34413a;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 @keyframes reveal-plan {
   from {
     opacity: 0;
@@ -1735,6 +1806,24 @@ h1 {
   .pareto-cumulative {
     grid-column: 2;
     max-width: 200px;
+  }
+
+  .resource-assignment-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .resource-field--person,
+  .resource-field--role {
+    grid-column: 1 / -1;
+  }
+
+  .resource-field--phase,
+  .resource-field--hours {
+    grid-column: span 1;
+  }
+
+  .resource-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

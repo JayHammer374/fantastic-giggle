@@ -15,8 +15,12 @@ const addParetoEntryButton = document.querySelector('#add-pareto-entry');
 const paretoResults = document.querySelector('#pareto-results');
 const paretoTotal = document.querySelector('#pareto-total');
 const paretoInsight = document.querySelector('#pareto-insight');
+const resourceAssignments = document.querySelector('#resource-assignments');
+const addResourceAssignmentButton = document.querySelector('#add-resource-assignment');
+const resourceSummary = document.querySelector('#resource-summary');
 let budgetLineCount = 0;
 let paretoEntryCount = 0;
+let resourceAssignmentCount = 0;
 
 const phaseTemplates = [
   {
@@ -398,6 +402,112 @@ function updateParetoChart() {
   paretoInsight.textContent = `Las primeras ${thresholdIndex + 1} causas concentran ${thresholdPercent}% de las ocurrencias (referencia: 80%).`;
 }
 
+function addResourceAssignment() {
+  resourceAssignmentCount += 1;
+  const assignmentNumber = resourceAssignmentCount;
+  const assignment = document.createElement('fieldset');
+  assignment.className = 'resource-assignment';
+  assignment.dataset.resourceAssignment = '';
+  addTextElement(assignment, 'legend', 'budget-line-legend', `Asignacion ${assignmentNumber}`);
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'remove-budget-line';
+  removeButton.type = 'button';
+  removeButton.setAttribute('aria-label', `Eliminar asignacion ${assignmentNumber}`);
+  removeButton.textContent = 'Eliminar';
+  removeButton.addEventListener('click', () => {
+    assignment.remove();
+    updateResourceSummary();
+  });
+  assignment.append(removeButton);
+
+  const fields = document.createElement('div');
+  fields.className = 'resource-assignment-fields';
+  const addTextField = (key, labelText, type = 'text') => {
+    const field = document.createElement('div');
+    field.className = `budget-field resource-field--${key}`;
+    const id = `resource-${key}-${assignmentNumber}`;
+    addTextElement(field, 'label', '', labelText).htmlFor = id;
+    const input = document.createElement('input');
+    input.id = id;
+    input.type = type;
+    input.dataset.resourceField = key;
+    if (type === 'number') {
+      input.min = '0';
+      input.step = '0.5';
+      input.placeholder = '0';
+    }
+    field.append(input);
+    fields.append(field);
+  };
+
+  addTextField('person', 'Responsable o recurso');
+  addTextField('role', 'Rol o especialidad');
+
+  const phaseField = document.createElement('div');
+  phaseField.className = 'budget-field resource-field--phase';
+  const phaseId = `resource-phase-${assignmentNumber}`;
+  addTextElement(phaseField, 'label', '', 'Fase PHVA').htmlFor = phaseId;
+  const phaseSelect = document.createElement('select');
+  phaseSelect.id = phaseId;
+  phaseSelect.dataset.resourceField = 'phase';
+  for (const phase of phaseTemplates) {
+    const option = document.createElement('option');
+    option.value = phase.name;
+    option.textContent = phase.name;
+    phaseSelect.append(option);
+  }
+  phaseField.append(phaseSelect);
+  fields.append(phaseField);
+
+  addTextField('hours', 'Horas estimadas', 'number');
+  assignment.append(fields);
+  resourceAssignments.append(assignment);
+  updateResourceSummary();
+}
+
+function renderResourceAssignments() {
+  resourceAssignments.replaceChildren();
+  resourceAssignmentCount = 0;
+  addResourceAssignment();
+}
+
+function updateResourceSummary() {
+  const hoursByPhase = Object.fromEntries(phaseTemplates.map((phase) => [phase.name, 0]));
+  let assignmentCount = 0;
+
+  for (const assignment of resourceAssignments.querySelectorAll('[data-resource-assignment]')) {
+    const person = assignment.querySelector('[data-resource-field="person"]').value.trim();
+    const role = assignment.querySelector('[data-resource-field="role"]').value.trim();
+    if (!person && !role) {
+      continue;
+    }
+
+    assignmentCount += 1;
+    const phase = assignment.querySelector('[data-resource-field="phase"]').value;
+    const hours = Math.max(0, Number(assignment.querySelector('[data-resource-field="hours"]').value) || 0);
+    hoursByPhase[phase] += hours;
+  }
+
+  resourceSummary.replaceChildren();
+  const totalHours = Object.values(hoursByPhase).reduce((sum, hours) => sum + hours, 0);
+  const summaryItems = [
+    { label: 'Asignaciones', value: new Intl.NumberFormat('es-CO').format(assignmentCount) },
+    { label: 'Horas estimadas', value: `${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(totalHours)} h` },
+    ...phaseTemplates.map((phase) => ({
+      label: phase.name,
+      value: `${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(hoursByPhase[phase.name])} h`,
+    })),
+  ];
+
+  for (const item of summaryItems) {
+    const row = document.createElement('div');
+    addTextElement(row, 'dt', '', item.label);
+    addTextElement(row, 'dd', '', item.value);
+    resourceSummary.append(row);
+  }
+}
+
 addBudgetLineButton.addEventListener('click', addBudgetLine);
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
@@ -406,6 +516,9 @@ document.querySelectorAll('.aiu-rate').forEach((input) => {
 });
 addParetoEntryButton.addEventListener('click', addParetoEntry);
 paretoInputs.addEventListener('input', updateParetoChart);
+addResourceAssignmentButton.addEventListener('click', addResourceAssignment);
+resourceAssignments.addEventListener('input', updateResourceSummary);
+resourceAssignments.addEventListener('change', updateResourceSummary);
 
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
@@ -437,6 +550,7 @@ projectForm.addEventListener('submit', (event) => {
   renderIsoChecklist();
   renderBudgetLines();
   renderParetoEntries();
+  renderResourceAssignments();
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';
