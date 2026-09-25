@@ -283,6 +283,30 @@
               </div>
             </section>
 
+            <section class="secop-review" aria-labelledby="secop-title">
+              <div class="budget-heading">
+                <div>
+                  <p class="iso-kicker">DATOS ABIERTOS · COLOMBIA</p>
+                  <h3 id="secop-title">Referencias contractuales SECOP II</h3>
+                  <p class="iso-description">Busca contratos públicos por descripción y departamento.</p>
+                </div>
+              </div>
+              <p class="budget-disclaimer">Los valores son totales de contratos, no precios unitarios de materiales. Úsalos como contexto histórico; revisa alcance, fecha y territorio en la fuente oficial.</p>
+              <div class="secop-search-fields">
+                <div class="budget-field">
+                  <label for="secop-query">Actividad o recurso</label>
+                  <input id="secop-query" type="search" maxlength="120" minlength="3" placeholder="Ej. suministro de materiales de construcción">
+                </div>
+                <div class="budget-field">
+                  <label for="secop-department">Departamento (opcional)</label>
+                  <input id="secop-department" type="text" maxlength="80" placeholder="Ej. Antioquia">
+                </div>
+                <button class="secondary-button" id="search-secop" type="button">Buscar en SECOP</button>
+              </div>
+              <p class="secop-status" id="secop-status" role="status" hidden></p>
+              <ol class="secop-results" id="secop-results" aria-label="Contratos públicos relacionados"></ol>
+            </section>
+
             <section class="pareto-review" aria-labelledby="pareto-title">
               <div class="budget-heading">
                 <div>

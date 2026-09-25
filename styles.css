@@ -1461,6 +1461,99 @@ h1 {
   display: none;
 }
 
+.secop-review {
+  display: grid;
+  gap: 12px;
+  padding-top: 19px;
+  border-top: 1px solid #edf0eb;
+}
+
+.secop-search-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 0.42fr) auto;
+  align-items: end;
+  gap: 10px;
+}
+
+.secop-status {
+  margin: 0;
+  color: #4f6651;
+  font-size: 9px;
+  line-height: 1.5;
+}
+
+.secop-status.is-error {
+  color: #8a4f3e;
+}
+
+.secop-status[hidden] {
+  display: none;
+}
+
+.secop-results {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.secop-result {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(145px, 0.3fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 2px;
+  border-top: 1px solid #edf0eb;
+}
+
+.secop-result-details {
+  display: grid;
+  min-width: 0;
+  gap: 4px;
+}
+
+.secop-result-details h4 {
+  margin: 0;
+  color: #435047;
+  font-family: 'Manrope', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.secop-result-details p {
+  margin: 0;
+  color: #818d85;
+  font-size: 8px;
+  line-height: 1.5;
+}
+
+.secop-result-details .secop-entity {
+  color: #59655f;
+  font-weight: 600;
+}
+
+.secop-amount {
+  display: grid;
+  gap: 4px;
+  color: #818d85;
+  font-size: 8px;
+}
+
+.secop-amount strong {
+  color: #34413a;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.secop-source-link {
+  color: var(--green);
+  font-size: 9px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .budget-disclaimer {
   margin: 0;
   padding: 10px 12px;
@@ -2024,6 +2117,15 @@ h1 {
     justify-content: flex-start;
   }
 
+  .secop-search-fields,
+  .secop-result {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .secop-source-link {
+    width: fit-content;
+  }
+
   .budget-calculation {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -2418,6 +2520,8 @@ h1 {
   #import-budget-quotes,
   #export-budget-template,
   #export-budget-quotes,
+  #search-secop,
+  .secop-search-fields,
   .remove-budget-line {
     display: none !important;
   }

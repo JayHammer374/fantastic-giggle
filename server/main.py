@@ -48,6 +48,39 @@ class PlanDraft(BaseModel):
         return self
 
 
+class ContractSearchRequest(BaseModel):
+    query: str = Field(min_length=3, max_length=120)
+    department: str = Field(default="", max_length=80)
+    limit: int = Field(default=10, ge=1, le=20)
+
+    @field_validator("query")
+    @classmethod
+    def query_must_not_be_blank(cls, value: str) -> str:
+        cleaned = value.strip()
+        if len(cleaned) < 3:
+            raise ValueError("Escribe al menos tres caracteres para buscar")
+        return cleaned
+
+    @field_validator("department")
+    @classmethod
+    def clean_department(cls, value: str) -> str:
+        return value.strip()
+
+
+class ContractReference(BaseModel):
+    entity: str
+    department: str
+    city: str
+    description: str
+    contract_type: str
+    signed_at: str | None
+    contract_amount_cop: str | None
+    contract_id: str
+    contract_reference: str
+    source_url: str | None
+SECOP_CONTRACTS_URL = "https://www.datos.gov.co/resource/jbjy-vk9h.json"
+
+
 app = FastAPI(title="Proyecto Claro API", version="0.1.0")
 PUBLIC_FILES = Path(__file__).resolve().parent.parent
 
@@ -138,3 +171,54 @@ async def health() -> dict[str, bool | str]:
 @app.post("/api/v1/plans/generate", response_model=PlanDraft)
 async def generate_plan(project: ProjectRequest) -> PlanDraft:
     return await request_plan_from_provider(project)
+
+
+@app.post("/api/v1/market/contract-references", response_model=list[ContractReference])
+async def search_contract_references(search: ContractSearchRequest) -> list[ContractReference]:
+    params = {
+        "$select": (
+            "nombre_entidad,departamento,ciudad,descripcion_del_proceso,tipo_de_contrato,"
+            "fecha_de_firma,valor_del_contrato,id_contrato,referencia_del_contrato,urlproceso"
+        ),
+        "$q": search.query,
+        "$limit": str(search.limit),
+        "$order": "fecha_de_firma DESC",
+    }
+    if search.department:
+        escaped_department = search.department.replace("'", "''")
+        params["$where"] = f"upper(departamento) = '{escaped_department.upper()}'"
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            response = await client.get(SECOP_CONTRACTS_URL, params=params)
+            response.raise_for_status()
+    except httpx.TimeoutException as error:
+        raise HTTPException(status_code=504, detail="SECOP excedio el tiempo de espera.") from error
+    except httpx.RequestError as error:
+        raise HTTPException(status_code=502, detail="No fue posible consultar el conjunto publico de SECOP.") from error
+    except httpx.HTTPStatusError as error:
+        raise HTTPException(status_code=502, detail="SECOP rechazo la consulta publica.") from error
+
+    try:
+        rows = response.json()
+        if not isinstance(rows, list):
+            raise TypeError
+        references = []
+        for row in rows:
+            source = row.get("urlproceso")
+            source_url = source.get("url") if isinstance(source, dict) else None
+            references.append(ContractReference(
+                entity=str(row.get("nombre_entidad") or "Entidad sin nombre"),
+                department=str(row.get("departamento") or "No definido"),
+                city=str(row.get("ciudad") or "No definida"),
+                description=str(row.get("descripcion_del_proceso") or "Sin descripcion"),
+                contract_type=str(row.get("tipo_de_contrato") or "No definido"),
+                signed_at=row.get("fecha_de_firma"),
+                contract_amount_cop=row.get("valor_del_contrato"),
+                contract_id=str(row.get("id_contrato") or ""),
+                contract_reference=str(row.get("referencia_del_contrato") or ""),
+                source_url=source_url,
+            ))
+        return references
+    except (TypeError, ValidationError) as error:
+        raise HTTPException(status_code=502, detail="SECOP devolvio registros con formato no valido.") from error

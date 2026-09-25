@@ -39,6 +39,11 @@ const importBudgetQuotesButton = document.querySelector('#import-budget-quotes')
 const exportBudgetTemplateButton = document.querySelector('#export-budget-template');
 const exportBudgetQuotesButton = document.querySelector('#export-budget-quotes');
 const budgetImportStatus = document.querySelector('#budget-import-status');
+const secopQuery = document.querySelector('#secop-query');
+const secopDepartment = document.querySelector('#secop-department');
+const searchSecopButton = document.querySelector('#search-secop');
+const secopStatus = document.querySelector('#secop-status');
+const secopResults = document.querySelector('#secop-results');
 const localDraftKey = 'proyecto-claro:draft:v1';
 const localProjectsKey = 'proyecto-claro:projects:v1';
 let budgetLineCount = 0;
@@ -620,6 +625,91 @@ function updateBudgetTotals() {
   document.querySelector('#budget-grand-total').textContent = formatCop(calculationBase + administration + contingency + profit);
 }
 
+function renderSecopResults(references) {
+  secopResults.replaceChildren();
+
+  for (const reference of references) {
+    const row = document.createElement('li');
+    row.className = 'secop-result';
+    const details = document.createElement('div');
+    details.className = 'secop-result-details';
+    addTextElement(details, 'h4', '', reference.description || 'Contrato sin descripcion');
+    addTextElement(details, 'p', 'secop-entity', reference.entity);
+
+    const date = reference.signed_at ? new Date(reference.signed_at) : null;
+    const dateLabel = date && !Number.isNaN(date.valueOf())
+      ? date.toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })
+      : 'Fecha no disponible';
+    const location = [reference.city, reference.department].filter((value) => value && value !== 'No definida' && value !== 'No definido').join(', ');
+    addTextElement(details, 'p', 'secop-meta', [reference.contract_type, location || 'Territorio no definido', dateLabel, reference.contract_reference || reference.contract_id].filter(Boolean).join(' · '));
+    row.append(details);
+
+    const value = Number(reference.contract_amount_cop);
+    const amount = document.createElement('div');
+    amount.className = 'secop-amount';
+    addTextElement(amount, 'span', '', 'Valor total del contrato');
+    addTextElement(amount, 'strong', '', Number.isFinite(value) ? formatCop(value) : 'No reportado');
+    row.append(amount);
+
+    if (reference.source_url) {
+      try {
+        const sourceUrl = new URL(reference.source_url);
+        if (sourceUrl.protocol === 'https:' && sourceUrl.hostname === 'community.secop.gov.co') {
+          const link = document.createElement('a');
+          link.className = 'secop-source-link';
+          link.href = sourceUrl.href;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'Ver contrato';
+          row.append(link);
+        }
+      } catch {
+      }
+    }
+    secopResults.append(row);
+  }
+}
+
+async function searchSecopContracts() {
+  const query = secopQuery.value.trim();
+  if (query.length < 3) {
+    secopStatus.hidden = false;
+    secopStatus.classList.add('is-error');
+    secopStatus.textContent = 'Escribe al menos tres caracteres para buscar.';
+    return;
+  }
+
+  searchSecopButton.disabled = true;
+  searchSecopButton.textContent = 'Buscando...';
+  secopStatus.hidden = false;
+  secopStatus.classList.remove('is-error');
+  secopStatus.textContent = 'Consultando SECOP II...';
+  try {
+    const response = await fetch('/api/v1/market/contract-references', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, department: secopDepartment.value.trim(), limit: 10 }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || `La consulta respondio con estado ${response.status}.`);
+    }
+    renderSecopResults(result);
+    secopStatus.textContent = result.length
+      ? `${result.length} referencias contractuales recibidas de SECOP II.`
+      : 'SECOP II no devolvio contratos para esta busqueda.';
+  } catch (error) {
+    secopResults.replaceChildren();
+    secopStatus.classList.add('is-error');
+    secopStatus.textContent = error instanceof TypeError
+      ? 'No se pudo conectar con el backend SECOP.'
+      : error.message;
+  } finally {
+    searchSecopButton.disabled = false;
+    searchSecopButton.textContent = 'Buscar en SECOP';
+  }
+}
+
 function renderBudgetLines() {
   budgetLines.replaceChildren();
   budgetLineCount = 0;
@@ -1179,6 +1269,7 @@ budgetImportFile.addEventListener('change', async () => {
     budgetImportFile.value = '';
   }
 });
+searchSecopButton.addEventListener('click', searchSecopContracts);
 budgetLines.addEventListener('input', updateBudgetTotals);
 budgetLines.addEventListener('change', updateBudgetTotals);
 document.querySelectorAll('.aiu-rate').forEach((input) => {
