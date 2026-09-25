@@ -157,6 +157,8 @@ function addBudgetField(container, lineNumber, key, labelText, type = 'number') 
     input.min = '0';
     input.step = 'any';
     input.placeholder = '0';
+  } else if (type === 'url') {
+    input.placeholder = 'https://...';
   }
   field.append(input);
   container.append(field);
@@ -207,6 +209,27 @@ function addBudgetLine() {
   addBudgetField(fields, lineNumber, 'unit-cost', 'Precio unitario (COP)');
   addBudgetField(fields, lineNumber, 'waste-rate', 'Desperdicio %');
   addBudgetField(fields, lineNumber, 'source', 'Fuente o proveedor', 'text');
+  const sourceUrlInput = addBudgetField(fields, lineNumber, 'source-url', 'URL de la referencia', 'url');
+  const sourceLink = document.createElement('a');
+  sourceLink.className = 'budget-source-link';
+  sourceLink.textContent = 'Abrir fuente';
+  sourceLink.target = '_blank';
+  sourceLink.rel = 'noopener noreferrer';
+  sourceLink.hidden = true;
+  sourceUrlInput.parentElement.append(sourceLink);
+  sourceUrlInput.addEventListener('input', () => {
+    try {
+      const url = new URL(sourceUrlInput.value.trim());
+      if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+        throw new TypeError('Protocolo no permitido');
+      }
+      sourceLink.href = url.href;
+      sourceLink.hidden = false;
+    } catch {
+      sourceLink.removeAttribute('href');
+      sourceLink.hidden = true;
+    }
+  });
   addBudgetField(fields, lineNumber, 'quote-date', 'Fecha de cotizacion', 'date');
   line.append(fields);
   budgetLines.append(line);

@@ -1386,18 +1386,40 @@ h1 {
 }
 
 .budget-field--unit,
-.budget-field--quantity,
-.budget-field--unit-cost,
-.budget-field--waste-rate {
+.budget-field--quantity {
+  grid-column: span 1;
+}
+
+.budget-field--unit-cost {
   grid-column: span 2;
 }
 
+.budget-field--waste-rate {
+  grid-column: span 1;
+}
+
 .budget-field--source {
-  grid-column: span 8;
+  grid-column: span 5;
+}
+
+.budget-field--source-url {
+  grid-column: span 5;
 }
 
 .budget-field--quote-date {
-  grid-column: span 4;
+  grid-column: span 2;
+}
+
+.budget-source-link {
+  width: fit-content;
+  color: var(--green);
+  font-size: 9px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.budget-source-link[hidden] {
+  display: none;
 }
 
 .budget-calculation {
@@ -1527,7 +1549,8 @@ h1 {
   }
 
   .budget-field--description,
-  .budget-field--source {
+  .budget-field--source,
+  .budget-field--source-url {
     grid-column: 1 / -1;
   }
 
