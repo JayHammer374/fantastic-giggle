@@ -213,6 +213,49 @@
               <ul class="iso-checklist" id="iso-checklist"></ul>
               <p class="iso-disclaimer">Lista orientativa; no constituye auditoria ni certificacion. Confirma la version de la norma y adapta los controles al alcance del proyecto.</p>
             </section>
+
+            <section class="budget-review" aria-labelledby="budget-review-title">
+              <div class="budget-heading">
+                <div>
+                  <p class="iso-kicker">ESTIMACION DE COSTOS</p>
+                  <h3 id="budget-review-title">Presupuesto por partidas</h3>
+                  <p class="iso-description">Registra cantidades, precios y la fuente de cada referencia.</p>
+                </div>
+                <button class="secondary-button" id="add-budget-line" type="button"><span aria-hidden="true">+</span> Agregar partida</button>
+              </div>
+              <p class="budget-disclaimer">No se consultan precios de mercado. Ingresa cotizaciones o referencias verificables. A.I.U. se calcula sobre costos directos y desperdicio; confirma la metodologia contractual. Impuestos no incluidos.</p>
+              <div class="budget-lines" id="budget-lines" aria-label="Partidas del presupuesto"></div>
+
+              <div class="budget-calculation">
+                <fieldset class="aiu-settings">
+                  <legend>Porcentajes A.I.U.</legend>
+                  <p>Son editables y aplican sobre costos directos mas desperdicio.</p>
+                  <div class="aiu-fields">
+                    <div class="budget-field">
+                      <label for="aiu-administration">Administracion %</label>
+                      <input class="aiu-rate" id="aiu-administration" data-aiu-rate="administration" type="number" min="0" step="0.1" value="0">
+                    </div>
+                    <div class="budget-field">
+                      <label for="aiu-contingency">Imprevistos %</label>
+                      <input class="aiu-rate" id="aiu-contingency" data-aiu-rate="contingency" type="number" min="0" step="0.1" value="0">
+                    </div>
+                    <div class="budget-field">
+                      <label for="aiu-profit">Utilidad %</label>
+                      <input class="aiu-rate" id="aiu-profit" data-aiu-rate="profit" type="number" min="0" step="0.1" value="0">
+                    </div>
+                  </div>
+                </fieldset>
+
+                <dl class="budget-summary" aria-label="Resumen del presupuesto">
+                  <div><dt>Costos directos</dt><dd id="budget-direct-total">$ 0</dd></div>
+                  <div><dt>Desperdicio</dt><dd id="budget-waste-total">$ 0</dd></div>
+                  <div><dt>A.I.U. Administracion</dt><dd id="budget-administration-total">$ 0</dd></div>
+                  <div><dt>A.I.U. Imprevistos</dt><dd id="budget-contingency-total">$ 0</dd></div>
+                  <div><dt>A.I.U. Utilidad</dt><dd id="budget-profit-total">$ 0</dd></div>
+                  <div class="budget-grand-total"><dt>Total estimado</dt><dd id="budget-grand-total">$ 0</dd></div>
+                </dl>
+              </div>
+            </section>
           </section>
 
           <footer class="page-footer"><span>Proyecto Claro <span class="footer-separator">/</span> Planificacion con calidad</span><span>Valores de referencia en pesos colombianos (COP)</span></footer>

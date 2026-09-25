@@ -8,6 +8,9 @@ const draftStatus = document.querySelector('#draft-status');
 const isoChecklist = document.querySelector('#iso-checklist');
 const isoProgress = document.querySelector('#iso-progress');
 const isoProgressBar = document.querySelector('#iso-progress-bar');
+const budgetLines = document.querySelector('#budget-lines');
+const addBudgetLineButton = document.querySelector('#add-budget-line');
+let budgetLineCount = 0;
 
 const phaseTemplates = [
   {
@@ -130,6 +133,130 @@ function renderIsoChecklist() {
   updateIsoProgress();
 }
 
+function formatCop(value) {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function addBudgetField(container, lineNumber, key, labelText, type = 'number') {
+  const field = document.createElement('div');
+  field.className = `budget-field budget-field--${key}`;
+
+  const id = `budget-${key}-${lineNumber}`;
+  addTextElement(field, 'label', '', labelText).htmlFor = id;
+
+  const input = document.createElement('input');
+  input.id = id;
+  input.dataset.budgetField = key;
+  input.type = type;
+  input.required = key === 'description';
+  if (type === 'number') {
+    input.min = '0';
+    input.step = 'any';
+    input.placeholder = '0';
+  }
+  field.append(input);
+  container.append(field);
+  return input;
+}
+
+function addBudgetLine() {
+  budgetLineCount += 1;
+  const lineNumber = budgetLineCount;
+  const line = document.createElement('fieldset');
+  line.className = 'budget-line';
+  line.dataset.budgetLine = '';
+
+  addTextElement(line, 'legend', 'budget-line-legend', `Partida ${lineNumber}`);
+
+  const removeButton = document.createElement('button');
+  removeButton.className = 'remove-budget-line';
+  removeButton.type = 'button';
+  removeButton.setAttribute('aria-label', `Eliminar partida ${lineNumber}`);
+  removeButton.textContent = 'Eliminar';
+  removeButton.addEventListener('click', () => {
+    line.remove();
+    updateBudgetTotals();
+  });
+  line.append(removeButton);
+
+  const fields = document.createElement('div');
+  fields.className = 'budget-line-fields';
+  addBudgetField(fields, lineNumber, 'description', 'Recurso o actividad', 'text');
+
+  const unitField = document.createElement('div');
+  unitField.className = 'budget-field budget-field--unit';
+  const unitId = `budget-unit-${lineNumber}`;
+  addTextElement(unitField, 'label', '', 'Unidad').htmlFor = unitId;
+  const unitSelect = document.createElement('select');
+  unitSelect.id = unitId;
+  unitSelect.dataset.budgetField = 'unit';
+  for (const unit of ['Unidad', 'Hora', 'Jornada', 'm', 'm2', 'm3', 'kg', 'Litro', 'Servicio']) {
+    const option = document.createElement('option');
+    option.value = unit;
+    option.textContent = unit;
+    unitSelect.append(option);
+  }
+  unitField.append(unitSelect);
+  fields.append(unitField);
+
+  addBudgetField(fields, lineNumber, 'quantity', 'Cantidad');
+  addBudgetField(fields, lineNumber, 'unit-cost', 'Precio unitario (COP)');
+  addBudgetField(fields, lineNumber, 'waste-rate', 'Desperdicio %');
+  addBudgetField(fields, lineNumber, 'source', 'Fuente o proveedor', 'text');
+  addBudgetField(fields, lineNumber, 'quote-date', 'Fecha de cotizacion', 'date');
+  line.append(fields);
+  budgetLines.append(line);
+  updateBudgetTotals();
+}
+
+function updateBudgetTotals() {
+  let directCost = 0;
+  let wasteCost = 0;
+
+  for (const line of budgetLines.querySelectorAll('[data-budget-line]')) {
+    const fieldValue = (name) => Math.max(0, Number(line.querySelector(`[data-budget-field="${name}"]`).value) || 0);
+    const lineDirectCost = fieldValue('quantity') * fieldValue('unit-cost');
+    directCost += lineDirectCost;
+    wasteCost += lineDirectCost * fieldValue('waste-rate') / 100;
+  }
+
+  const calculationBase = directCost + wasteCost;
+  const aiuValue = (name) => {
+    const rate = Math.max(0, Number(document.querySelector(`[data-aiu-rate="${name}"]`).value) || 0);
+    return calculationBase * rate / 100;
+  };
+  const administration = aiuValue('administration');
+  const contingency = aiuValue('contingency');
+  const profit = aiuValue('profit');
+
+  document.querySelector('#budget-direct-total').textContent = formatCop(directCost);
+  document.querySelector('#budget-waste-total').textContent = formatCop(wasteCost);
+  document.querySelector('#budget-administration-total').textContent = formatCop(administration);
+  document.querySelector('#budget-contingency-total').textContent = formatCop(contingency);
+  document.querySelector('#budget-profit-total').textContent = formatCop(profit);
+  document.querySelector('#budget-grand-total').textContent = formatCop(calculationBase + administration + contingency + profit);
+}
+
+function renderBudgetLines() {
+  budgetLines.replaceChildren();
+  budgetLineCount = 0;
+  document.querySelectorAll('.aiu-rate').forEach((input) => {
+    input.value = '0';
+  });
+  addBudgetLine();
+}
+
+addBudgetLineButton.addEventListener('click', addBudgetLine);
+budgetLines.addEventListener('input', updateBudgetTotals);
+budgetLines.addEventListener('change', updateBudgetTotals);
+document.querySelectorAll('.aiu-rate').forEach((input) => {
+  input.addEventListener('input', updateBudgetTotals);
+});
+
 projectForm.addEventListener('submit', (event) => {
   event.preventDefault();
 
@@ -158,6 +285,7 @@ projectForm.addEventListener('submit', (event) => {
     renderPhase(phase);
   }
   renderIsoChecklist();
+  renderBudgetLines();
 
   planResult.hidden = false;
   draftStatus.textContent = 'Estructura generada en esta sesión';
