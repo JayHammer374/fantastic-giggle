@@ -211,7 +211,27 @@
                 <span class="generated-badge">BORRADOR</span>
                 <button class="secondary-button" id="save-project" type="button">Guardar proyecto</button>
                 <button class="secondary-button" id="print-plan" type="button">Exportar a PDF</button>
-                <button class="secondary-button" id="generate-ai-plan" type="button">Generar con IA</button>
+                <!-- Modal de aceptación legal -->
+<div id="legal-acceptance-modal" class="legal-acceptance-modal" hidden>
+  <div class="legal-acceptance-content">
+    <h3 class="legal-acceptance-title">Aceptación de Términos y Condiciones</h3>
+    <p class="legal-acceptance-text">
+      Al hacer clic en "Generar con IA", confirmo que he leído y acepto los <a href="#terminos" class="legal-acceptance-link">Términos y Condiciones de Uso</a> y la <a href="#politica" class="legal-acceptance-link">Política de Privacidad</a> de Proyecto Claro. También acepto el <a href="#disclaimer" class="legal-acceptance-link">Descargo de Responsabilidad</a> asociado a la generación de planes por IA.
+    </p>
+    
+    <div class="legal-acceptance-checkbox-wrapper">
+      <input type="checkbox" id="legal-acceptance" class="legal-acceptance-checkbox" required>
+      <label for="legal-acceptance" class="legal-acceptance-label">
+        Acepto los Términos y Condiciones, Política de Privacidad y Descargo de Responsabilidad
+      </label>
+    </div>
+    
+    <button class="primary-button" id="accept-legal-button" type="button">Aceptar y Continuar</button>
+    <button class="secondary-button" id="decline-legal-button" type="button">Cancelar</button>
+  </div>
+</div>
+
+<button class="secondary-button" id="generate-ai-plan" type="button">Generar con IA</button>
               </div>
             </header>
             <p class="ai-feedback" id="ai-feedback" role="status" hidden></p>
@@ -357,6 +377,40 @@
               <ul class="legal-checklist" id="legal-checklist"></ul>
               <p class="budget-disclaimer">Lista orientativa, no es asesoria juridica ni determina obligaciones. La aplicabilidad depende del proyecto, territorio, sector y contrato; valida con las entidades competentes o un profesional calificado.</p>
             </section>
+          </section>
+
+          <!-- Páginas estáticas de términos y políticas -->
+          <section id="terminos" class="legal-page" aria-labelledby="terminos-title" hidden>
+            <header class="page-header">
+              <h2 id="terminos-title">Términos y Condiciones de Uso</h2>
+              <p class="page-description">Acuerdo legal para el uso de Proyecto Claro</p>
+            </header>
+            <div class="legal-page-content">
+              <!-- Contenido se cargará desde terms_and_conditions.md -->
+              <div id="terminos-content">Cargando términos...</div>
+            </div>
+          </section>
+
+          <section id="politica" class="legal-page" aria-labelledby="politica-title" hidden>
+            <header class="page-header">
+              <h2 id="politica-title">Política de Privacidad</h2>
+              <p class="page-description">Cómo protegemos sus datos personales</p>
+            </header>
+            <div class="legal-page-content">
+              <!-- Contenido se cargará desde privacy_policy.md -->
+              <div id="politica-content">Cargando política...</div>
+            </div>
+          </section>
+
+          <section id="disclaimer" class="legal-page" aria-labelledby="disclaimer-title" hidden>
+            <header class="page-header">
+              <h2 id="disclaimer-title">Descargo de Responsabilidad</h2>
+              <p class="page-description">Limitación de responsabilidad y avisos legales</p>
+            </header>
+            <div class="legal-page-content">
+              <!-- Contenido se cargará desde disclaimer.md -->
+              <div id="disclaimer-content">Cargando descargo...</div>
+            </div>
           </section>
 
           <footer class="page-footer"><span>Proyecto Claro <span class="footer-separator">/</span> Planificacion con calidad</span><span>Valores de referencia en pesos colombianos (COP)</span></footer>

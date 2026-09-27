@@ -20,6 +20,7 @@ class ProjectRequest(BaseModel):
     estimated_budget_cop: int | None = Field(default=None, ge=0)
     estimated_duration_weeks: int | None = Field(default=None, ge=1)
     objective: str = Field(default="", max_length=2000)
+    legal_acceptance: bool = Field(default=False)
 
     @field_validator("project_name", "sector")
     @classmethod
@@ -28,6 +29,13 @@ class ProjectRequest(BaseModel):
         if not cleaned:
             raise ValueError("Este campo no puede estar vacio")
         return cleaned
+
+    @field_validator("legal_acceptance")
+    @classmethod
+    def legal_acceptance_must_be_true(cls, value: bool) -> bool:
+        if not value:
+            raise ValueError("Debes aceptar los terminos y condiciones antes de generar un plan")
+        return value
 
 
 class PhasePlan(BaseModel):
@@ -98,6 +106,21 @@ async def serve_styles() -> FileResponse:
 @app.get("/app.js", include_in_schema=False)
 async def serve_script() -> FileResponse:
     return FileResponse(PUBLIC_FILES / "app.js")
+
+
+@app.get("/terminos", include_in_schema=False)
+async def serve_terms() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "terms_and_conditions.md")
+
+
+@app.get("/politica", include_in_schema=False)
+async def serve_privacy() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "privacy_policy.md")
+
+
+@app.get("/disclaimer", include_in_schema=False)
+async def serve_disclaimer() -> FileResponse:
+    return FileResponse(PUBLIC_FILES / "disclaimer.md")
 
 
 def build_messages(project: ProjectRequest) -> list[dict[str, str]]:

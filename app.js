@@ -53,6 +53,12 @@ let restoringDraft = false;
 let currentGeneratedPlan = null;
 let currentProjectId = null;
 
+// Legal acceptance elements
+const legalAcceptanceModal = document.querySelector('#legal-acceptance-modal');
+const acceptLegalButton = document.querySelector('#accept-legal-button');
+const declineLegalButton = document.querySelector('#decline-legal-button');
+const legalAcceptanceCheckbox = document.querySelector('#legal-acceptance');
+
 const phaseTemplates = [
   {
     name: 'Planear',
@@ -221,6 +227,15 @@ async function generatePlanWithAI() {
     return;
   }
 
+  const legalAccepted = document.querySelector('#legal-acceptance');
+  if (!legalAccepted || !legalAccepted.checked) {
+    aiFeedback.hidden = false;
+    aiFeedback.classList.add('is-error');
+    aiFeedback.textContent = 'Debes aceptar los Terminos y Condiciones, la Politica de Privacidad y el Descargo de Responsabilidad antes de generar un plan.';
+    draftStatus.textContent = 'Aceptacion legal requerida';
+    return;
+  }
+
   generateAiPlanButton.disabled = true;
   generateAiPlanButton.textContent = 'Generando...';
   aiFeedback.hidden = false;
@@ -239,6 +254,7 @@ async function generatePlanWithAI() {
     estimated_budget_cop: budgetValue ? Math.trunc(Number(budgetValue)) : null,
     estimated_duration_weeks: durationValue ? Math.trunc(Number(durationValue)) : null,
     objective: formData.get('project-objective').trim(),
+    legal_acceptance: true,
   };
 
   try {
@@ -1284,9 +1300,34 @@ legalChecklist.addEventListener('change', updateLegalProgress);
 document.addEventListener('input', saveDraftState);
 document.addEventListener('change', saveDraftState);
 document.addEventListener('click', saveDraftState);
-generateAiPlanButton.addEventListener('click', generatePlanWithAI);
+generateAiPlanButton.addEventListener('click', () => {
+  if (legalAcceptanceModal) {
+    legalAcceptanceModal.hidden = false;
+    if (legalAcceptanceCheckbox) {
+      legalAcceptanceCheckbox.checked = false;
+      legalAcceptanceCheckbox.focus();
+    }
+  }
+});
 printPlanButton.addEventListener('click', () => window.print());
 saveProjectButton.addEventListener('click', saveProjectToLibrary);
+
+if (acceptLegalButton && legalAcceptanceModal && legalAcceptanceCheckbox) {
+  acceptLegalButton.addEventListener('click', () => {
+    if (legalAcceptanceCheckbox.checked) {
+      legalAcceptanceModal.hidden = true;
+      generatePlanWithAI();
+    }
+  });
+}
+
+if (declineLegalButton && legalAcceptanceModal) {
+  declineLegalButton.addEventListener('click', () => {
+    legalAcceptanceModal.hidden = true;
+    draftStatus.textContent = 'Generacion cancelada por el usuario';
+  });
+}
+
 newPlanNavigation.addEventListener('click', (event) => {
   event.preventDefault();
   startNewProject();
